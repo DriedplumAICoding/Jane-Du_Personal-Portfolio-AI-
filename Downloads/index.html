@@ -229,15 +229,10 @@
   .bento-card-1 { grid-column: span 7; grid-row: span 2; }
   .bento-card-2 { grid-column: span 5; }
   .bento-card-3 { grid-column: span 5; }
-  .bento-card-4 { grid-column: span 4; }
-  .bento-card-5 { grid-column: span 4; }
-  .bento-card-6 { grid-column: span 4; }
+
 
   @media (max-width: 768px) {
-    .bento-card-1, .bento-card-2, .bento-card-3,
-    .bento-card-4, .bento-card-5, .bento-card-6 {
-      grid-column: span 12;
-    }
+    .bento-card-1, .bento-card-2, .bento-card-3
   }
 
   .bento-number {
@@ -710,10 +705,7 @@ const bento = document.getElementById('bento-grid');
 const bentoCards = [
   { cls: 'bento-card-1', content: `<p class="bento-label" style="margin-bottom:1rem;">About</p><p class="bento-desc">${p.tagline} With expertise across ML pipelines, recommendation systems, and generative AI tooling, I bridge the gap between research-grade models and production-grade infrastructure.</p>` },
   { cls: 'bento-card-2', content: `<div class="bento-number">${p.yearsExperience}</div><div class="bento-label">Years Experience</div>` },
-  { cls: 'bento-card-3', content: `<div class="bento-number" style="font-size:2rem;line-height:1.2;margin-bottom:0.5rem;">📍</div><div class="bento-number" style="font-size:1.5rem;">${p.location}</div><div class="bento-label">Based in</div>` },
-  { cls: 'bento-card-4', content: `<div class="bento-number">3</div><div class="bento-label">Companies</div>` },
-  { cls: 'bento-card-5', content: `<div class="bento-number">80M+</div><div class="bento-label">Emails Shipped</div>` },
-  { cls: 'bento-card-6', content: `<div style="margin-bottom:0.75rem;"><span class="tag accent">AI / ML</span></div><div class="bento-label">Primary Expertise</div>` }
+  { cls: 'bento-card-3', content: `<div class="bento-number" style="font-size:2rem;line-height:1.2;margin-bottom:0.5rem;">📍</div><div class="bento-number" style="font-size:1.5rem;">${p.location}</div><div class="bento-label">Based in</div>` }
 ];
 
 bentoCards.forEach(c => {
