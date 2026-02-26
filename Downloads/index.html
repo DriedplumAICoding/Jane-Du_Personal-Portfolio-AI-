@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jane Du — AI-Focused SDE</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050505;
+    --text: #F0F0F0;
+    --accent: #CCFF00;
+    --muted: #666666;
+    --glass-bg: rgba(255,255,255,0.04);
+    --glass-border: rgba(255,255,255,0.08);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    cursor: none;
+    overflow-x: hidden;
+  }
+
+  /* CUSTOM CURSOR */
+  #cursor {
+    position: fixed;
+    width: 20px; height: 20px;
+    border: 1.5px solid var(--accent);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: width 0.3s, height 0.3s, background 0.3s, border-color 0.3s;
+    mix-blend-mode: difference;
+  }
+  #cursor.hovering {
+    width: 48px; height: 48px;
+    background: rgba(204,255,0,0.15);
+  }
+  #cursor-dot {
+    position: fixed;
+    width: 4px; height: 4px;
+    background: var(--accent);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+  }
+
+  /* NOISE TEXTURE */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.4;
+  }
+
+  /* GLASSMORPHISM */
+  .glass {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  /* FONTS */
+  .font-display { font-family: 'Syne', sans-serif; }
+
+  /* HERO */
+  #hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    padding: 0 6vw;
+  }
+
+  .hero-bg-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.12;
+    pointer-events: none;
+  }
+
+  .hero-name {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(4rem, 14vw, 14rem);
+    font-weight: 800;
+    line-height: 0.9;
+    letter-spacing: -0.03em;
+    color: var(--text);
+  }
+
+  .hero-name .accent { color: var(--accent); }
+
+  .hero-role {
+    font-family: 'DM Mono', monospace;
+    font-size: clamp(0.75rem, 1.5vw, 1rem);
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-top: 2rem;
+  }
+
+  .hero-scroll {
+    position: absolute;
+    bottom: 2.5rem;
+    right: 6vw;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    writing-mode: vertical-rl;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .hero-scroll::before {
+    content: '';
+    display: block;
+    width: 1px;
+    height: 60px;
+    background: linear-gradient(to bottom, transparent, var(--accent));
+    animation: scrollLine 2s ease-in-out infinite;
+  }
+
+  @keyframes scrollLine {
+    0%, 100% { opacity: 0.3; transform: scaleY(1); }
+    50% { opacity: 1; transform: scaleY(1.1); }
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 1.5rem 6vw;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.05em;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 2.5rem;
+    list-style: none;
+  }
+
+  .nav-links a {
+    font-size: 0.72rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.3s;
+    position: relative;
+  }
+
+  .nav-links a::after {
+    content: '';
+    position: absolute;
+    bottom: -2px; left: 0;
+    width: 0; height: 1px;
+    background: var(--accent);
+    transition: width 0.3s;
+  }
+
+  .nav-links a:hover { color: var(--text); }
+  .nav-links a:hover::after { width: 100%; }
+
+  /* SECTION SHARED */
+  section { position: relative; z-index: 2; padding: 8rem 6vw; }
+  .section-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1rem;
+  }
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    margin-bottom: 4rem;
+  }
+
+  /* ABOUT - BENTO */
+  .bento-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-auto-rows: minmax(120px, auto);
+    gap: 1rem;
+  }
+
+  .bento-card {
+    border-radius: 16px;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.3s;
+  }
+
+  .bento-card:hover { transform: translateY(-4px); border-color: rgba(204,255,0,0.2) !important; }
+
+  .bento-card-1 { grid-column: span 7; grid-row: span 2; }
+  .bento-card-2 { grid-column: span 5; }
+  .bento-card-3 { grid-column: span 5; }
+  .bento-card-4 { grid-column: span 4; }
+  .bento-card-5 { grid-column: span 4; }
+  .bento-card-6 { grid-column: span 4; }
+
+  @media (max-width: 768px) {
+    .bento-card-1, .bento-card-2, .bento-card-3,
+    .bento-card-4, .bento-card-5, .bento-card-6 {
+      grid-column: span 12;
+    }
+  }
+
+  .bento-number {
+    font-family: 'Syne', sans-serif;
+    font-size: 4rem;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .bento-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 0.5rem;
+  }
+  .bento-desc {
+    font-size: 0.95rem;
+    line-height: 1.75;
+    color: rgba(240,240,240,0.7);
+  }
+
+  /* EXPERIENCE TIMELINE */
+  .timeline { position: relative; }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 1px;
+    background: var(--glass-border);
+  }
+
+  .timeline-item {
+    padding: 2.5rem 0 2.5rem 3rem;
+    position: relative;
+    transition: opacity 0.4s;
+    border-bottom: 1px solid var(--glass-border);
+  }
+
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -4px; top: 3rem;
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: var(--muted);
+    border: 1px solid var(--bg);
+    transition: background 0.3s, transform 0.3s;
+  }
+
+  .timeline:hover .timeline-item { opacity: 0.3; }
+  .timeline:hover .timeline-item:hover { opacity: 1; }
+
+  .timeline-item:hover::before {
+    background: var(--accent);
+    transform: scale(1.5);
+  }
+
+  .timeline-date {
+    font-size: 0.68rem;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+
+  .timeline-company {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+  }
+
+  .timeline-role {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-bottom: 1.25rem;
+    letter-spacing: 0.05em;
+  }
+
+  .timeline-bullets {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .timeline-bullets li {
+    font-size: 0.85rem;
+    color: rgba(240,240,240,0.65);
+    line-height: 1.6;
+    padding-left: 1rem;
+    position: relative;
+  }
+
+  .timeline-bullets li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-size: 0.7rem;
+  }
+
+  /* MARQUEE */
+  .marquee-wrapper {
+    overflow: hidden;
+    padding: 1.5rem 0;
+    border-top: 1px solid var(--glass-border);
+    border-bottom: 1px solid var(--glass-border);
+    margin-bottom: 1rem;
+  }
+
+  .marquee-track {
+    display: flex;
+    gap: 3rem;
+    width: max-content;
+    animation: marquee 20s linear infinite;
+  }
+
+  .marquee-track.reverse { animation-direction: reverse; animation-duration: 25s; }
+
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  .marquee-item {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 3rem;
+    transition: color 0.3s;
+  }
+
+  .marquee-item:hover { color: var(--accent); }
+
+  .marquee-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--glass-border);
+    flex-shrink: 0;
+  }
+
+  /* FOOTER */
+  #contact {
+    min-height: 50vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-top: 1px solid var(--glass-border);
+  }
+
+  .contact-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(3rem, 10vw, 9rem);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+
+  .contact-title .outline {
+    -webkit-text-stroke: 1px rgba(240,240,240,0.3);
+    color: transparent;
+  }
+
+  .btn-accent {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: var(--accent);
+    color: #050505;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 1rem 2rem;
+    border-radius: 100px;
+    text-decoration: none;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s;
+  }
+
+  .btn-accent:hover {
+    transform: scale(1.05) translateY(-2px);
+    box-shadow: 0 20px 60px rgba(204,255,0,0.25);
+  }
+
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    border: 1px solid var(--glass-border);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 1rem 2rem;
+    border-radius: 100px;
+    text-decoration: none;
+    transition: border-color 0.3s, background 0.3s;
+  }
+
+  .btn-ghost:hover {
+    border-color: var(--accent);
+    background: rgba(204,255,0,0.05);
+  }
+
+  .footer-meta {
+    margin-top: 4rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--glass-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.72rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+
+  /* LIQUID ORB ANIMATION */
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(100px);
+    pointer-events: none;
+    animation: orbFloat 8s ease-in-out infinite;
+  }
+
+  @keyframes orbFloat {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(30px, -20px) scale(1.05); }
+    66% { transform: translate(-20px, 15px) scale(0.95); }
+  }
+
+  /* DIVIDER LINE */
+  .h-line {
+    width: 100%;
+    height: 1px;
+    background: var(--glass-border);
+    margin: 2rem 0;
+  }
+
+  /* PILL TAGS */
+  .tag {
+    display: inline-block;
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.3rem 0.75rem;
+    border-radius: 100px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--muted);
+  }
+
+  .tag.accent {
+    background: rgba(204,255,0,0.1);
+    border-color: rgba(204,255,0,0.3);
+    color: var(--accent);
+  }
+
+  /* SCROLL REVEAL */
+  .reveal { opacity: 0; transform: translateY(30px); }
+</style>
+</head>
+<body>
+
+<script>
+// ═══════════════════════════════════════════════
+// EASY CONFIG — Edit this object to update content
+// ═══════════════════════════════════════════════
+const profileData = {
+  name: { first: "Jane", last: "Du" },
+  role: "AI-Focused Software Development Engineer",
+  location: "Bellevue, WA",
+  email: "jiayidu90@gmail.com",
+  phone: "+1 585-413-8839",
+  linkedin: "https://linkedin.com/in/jane-du",
+  yearsExperience: "6+",
+  tagline: "Designing scalable systems at the intersection of cloud infrastructure and generative AI.",
+
+  accent: "#CCFF00",
+  bg: "#050505",
+  text: "#F0F0F0",
+
+  experience: [
+    {
+      date: "Aug 2025 — Present",
+      company: "Amazon Kids+",
+      role: "Software Development Engineer II",
+      location: "Seattle, WA",
+      bullets: [
+        "Led end-to-end deployment of a VAE-based recommendation system using EMR, Redshift, S3, and Fargate orchestration",
+        "Designed automatic retry framework for 2,000+ ML pipeline jobs with Lambda + EventBridge, reducing transient failures by 30%",
+        "Redesigned personalization fallback logic with model-usage telemetry across multi-model recommendation system"
+      ]
+    },
+    {
+      date: "Dec 2021 — Aug 2025",
+      company: "Amazon Prime Gaming",
+      role: "Software Development Engineer II",
+      location: "Seattle, WA",
+      bullets: [
+        "Led delivery of post-claim transactional emails for 80M+ customers across 5 marketplaces, improving retention by up to 20%",
+        "Designed and built Prime Gaming notification system from scratch — backend services, frontend settings, and unsubscribe flow",
+        "Implemented MCP-based internal knowledge server with semantic search, improving onboarding efficiency",
+        "Led AI/LLM demo sessions at skip-level meetings"
+      ]
+    },
+    {
+      date: "Jan 2020 — Dec 2021",
+      company: "AWS Lambda & Prime Gaming",
+      role: "Software Development Engineer I",
+      location: "Seattle, WA",
+      bullets: [
+        "Proposed and implemented panic wrapper log changes, reducing service logs and saving 90% I/O memory",
+        "Normalized cold start latency by separating cached zip and squash artifacts — 30x improvement in customer experience"
+      ]
+    }
+  ],
+
+  skills: {
+    row1: ["Java", "Python", "Go", "JavaScript", "SQL", "Amazon Bedrock", "AWS Lambda", "Docker", "Spring Boot", "GraphQL", "DynamoDB", "Kinesis"],
+    row2: ["Kiro AI", "MCP Server", "VAE Models", "ML Pipelines", "LLM Integration", "A/B Testing", "EMR", "Fargate", "Step Functions", "CloudFormation", "CI/CD", "REST APIs"]
+  },
+
+  education: [
+    { degree: "PhD Candidate, Chemical Engineering (AI for Catalyst Selection)", school: "Oregon State University", year: "2016–2017" },
+    { degree: "MS", school: "University of Rochester", year: "2015" },
+    { degree: "BS (Dual Degree)", school: "SUNY ESF / Beijing U. of Chemical Technology", year: "2013" }
+  ]
+};
+</script>
+
+<!-- CURSOR -->
+<div id="cursor"></div>
+<div id="cursor-dot"></div>
+
+<!-- NAV -->
+<nav id="navbar">
+  <div class="nav-logo font-display" id="nav-logo"></div>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#experience">Work</a></li>
+    <li><a href="#skills">Skills</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="orb" style="width:600px;height:600px;background:rgba(204,255,0,0.06);top:-10%;right:-15%;animation-duration:10s;"></div>
+  <div class="orb" style="width:400px;height:400px;background:rgba(100,200,255,0.04);bottom:10%;left:-5%;animation-duration:13s;animation-delay:-4s;"></div>
+
+  <div style="position:relative;z-index:2;">
+    <div id="hero-eyebrow" style="font-size:0.7rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--muted);margin-bottom:1.5rem;opacity:0;">
+      <span id="hero-location"></span> &nbsp;·&nbsp; <span id="hero-role-small"></span>
+    </div>
+
+    <h1 class="hero-name" id="hero-name">
+      <span id="name-first"></span><span class="accent" id="name-dot">.</span><br>
+      <span id="name-last" style="opacity:0.18;"></span>
+    </h1>
+
+    <p class="hero-role" id="hero-tagline-el"></p>
+  </div>
+
+  <div class="hero-scroll">SCROLL</div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="reveal">
+    <p class="section-label">01 — About</p>
+    <h2 class="section-title">Building at the<br>edge of AI.</h2>
+  </div>
+
+  <div class="bento-grid" id="bento-grid"></div>
+</section>
+
+<!-- EXPERIENCE -->
+<section id="experience">
+  <div class="reveal">
+    <p class="section-label">02 — Experience</p>
+    <h2 class="section-title">Where I've<br>shipped things.</h2>
+  </div>
+
+  <div class="timeline" id="timeline"></div>
+
+  <!-- Education sub-section -->
+  <div style="margin-top:5rem;" class="reveal">
+    <p class="section-label" style="margin-bottom:1.5rem;">Education</p>
+    <div id="edu-list" style="display:flex;flex-direction:column;gap:1rem;"></div>
+  </div>
+</section>
+
+<!-- SKILLS -->
+<section id="skills" style="padding-bottom:4rem;">
+  <div class="reveal">
+    <p class="section-label">03 — Skills</p>
+    <h2 class="section-title">My stack.</h2>
+  </div>
+
+  <div class="marquee-wrapper reveal">
+    <div class="marquee-track" id="marquee-1"></div>
+  </div>
+  <div class="marquee-wrapper reveal" style="margin-top:0.5rem;">
+    <div class="marquee-track reverse" id="marquee-2"></div>
+  </div>
+</section>
+
+<!-- CONTACT / FOOTER -->
+<section id="contact">
+  <div class="orb" style="width:500px;height:500px;background:rgba(204,255,0,0.05);bottom:-20%;right:10%;animation-duration:12s;"></div>
+
+  <div style="position:relative;z-index:2;">
+    <p class="section-label reveal">04 — Contact</p>
+
+    <h2 class="contact-title reveal">
+      Let's<br>
+      <span class="outline">Build</span><br>
+      Together.
+    </h2>
+
+    <div style="margin-top:3rem;display:flex;flex-wrap:wrap;gap:1rem;" class="reveal">
+      <a class="btn-accent" id="email-btn" href="#">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
+        Say Hello
+      </a>
+      <a class="btn-ghost" id="linkedin-btn" href="#" target="_blank">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
+        LinkedIn
+      </a>
+    </div>
+
+    <div class="footer-meta">
+      <span id="footer-name"></span>
+      <span id="footer-year"></span>
+    </div>
+  </div>
+</section>
+
+<script>
+gsap.registerPlugin(ScrollTrigger);
+
+// ─── POPULATE DATA ───────────────────────────────────
+const p = profileData;
+
+document.getElementById('nav-logo').textContent = p.name.first + ' ' + p.name.last;
+document.getElementById('hero-location').textContent = p.location;
+document.getElementById('hero-role-small').textContent = p.role;
+document.getElementById('name-first').textContent = p.name.first;
+document.getElementById('name-last').textContent = p.name.last;
+document.getElementById('hero-tagline-el').textContent = p.tagline;
+document.getElementById('email-btn').href = 'mailto:' + p.email;
+document.getElementById('linkedin-btn').href = p.linkedin;
+document.getElementById('footer-name').textContent = p.name.first + ' ' + p.name.last + ' · ' + p.email;
+document.getElementById('footer-year').textContent = '© ' + new Date().getFullYear();
+
+// BENTO GRID
+const bento = document.getElementById('bento-grid');
+const bentoCards = [
+  { cls: 'bento-card-1', content: `<p class="bento-label" style="margin-bottom:1rem;">About</p><p class="bento-desc">${p.tagline} With expertise across ML pipelines, recommendation systems, and generative AI tooling, I bridge the gap between research-grade models and production-grade infrastructure.</p>` },
+  { cls: 'bento-card-2', content: `<div class="bento-number">${p.yearsExperience}</div><div class="bento-label">Years Experience</div>` },
+  { cls: 'bento-card-3', content: `<div class="bento-number" style="font-size:2rem;line-height:1.2;margin-bottom:0.5rem;">📍</div><div class="bento-number" style="font-size:1.5rem;">${p.location}</div><div class="bento-label">Based in</div>` },
+  { cls: 'bento-card-4', content: `<div class="bento-number">3</div><div class="bento-label">Companies</div>` },
+  { cls: 'bento-card-5', content: `<div class="bento-number">80M+</div><div class="bento-label">Emails Shipped</div>` },
+  { cls: 'bento-card-6', content: `<div style="margin-bottom:0.75rem;"><span class="tag accent">AI / ML</span></div><div class="bento-label">Primary Expertise</div>` }
+];
+
+bentoCards.forEach(c => {
+  const div = document.createElement('div');
+  div.className = `bento-card glass reveal ${c.cls}`;
+  div.innerHTML = c.content;
+  bento.appendChild(div);
+});
+
+// TIMELINE
+const timeline = document.getElementById('timeline');
+p.experience.forEach(exp => {
+  const item = document.createElement('div');
+  item.className = 'timeline-item reveal';
+  item.innerHTML = `
+    <div class="timeline-date">${exp.date} · ${exp.location}</div>
+    <div class="timeline-company">${exp.company}</div>
+    <div class="timeline-role">${exp.role}</div>
+    <ul class="timeline-bullets">
+      ${exp.bullets.map(b => `<li>${b}</li>`).join('')}
+    </ul>
+  `;
+  timeline.appendChild(item);
+});
+
+// EDUCATION
+const eduList = document.getElementById('edu-list');
+p.education.forEach(e => {
+  const div = document.createElement('div');
+  div.className = 'glass reveal';
+  div.style = 'border-radius:12px;padding:1.25rem 1.5rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;';
+  div.innerHTML = `
+    <div>
+      <div style="font-family:'Syne',sans-serif;font-weight:600;font-size:0.95rem;">${e.school}</div>
+      <div style="font-size:0.78rem;color:var(--muted);margin-top:0.2rem;">${e.degree}</div>
+    </div>
+    <span class="tag">${e.year}</span>
+  `;
+  eduList.appendChild(div);
+});
+
+// MARQUEE
+function buildMarquee(el, items) {
+  // Duplicate for infinite loop
+  const all = [...items, ...items];
+  el.innerHTML = all.map(s => `<span class="marquee-item">${s}<span class="marquee-dot"></span></span>`).join('');
+}
+buildMarquee(document.getElementById('marquee-1'), p.skills.row1);
+buildMarquee(document.getElementById('marquee-2'), p.skills.row2);
+
+// ─── CURSOR ───────────────────────────────────────────
+const cursor = document.getElementById('cursor');
+const cursorDot = document.getElementById('cursor-dot');
+let mouseX = 0, mouseY = 0;
+let curX = 0, curY = 0;
+
+document.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
+
+function animateCursor() {
+  curX += (mouseX - curX) * 0.12;
+  curY += (mouseY - curY) * 0.12;
+  cursor.style.left = curX + 'px';
+  cursor.style.top = curY + 'px';
+  cursorDot.style.left = mouseX + 'px';
+  cursorDot.style.top = mouseY + 'px';
+  requestAnimationFrame(animateCursor);
+}
+animateCursor();
+
+document.querySelectorAll('a, button').forEach(el => {
+  el.addEventListener('mouseenter', () => cursor.classList.add('hovering'));
+  el.addEventListener('mouseleave', () => cursor.classList.remove('hovering'));
+});
+
+// ─── GSAP ANIMATIONS ─────────────────────────────────
+// Hero entrance
+const heroTl = gsap.timeline({ defaults: { ease: 'power4.out' } });
+heroTl
+  .from('#hero-eyebrow', { opacity: 0, y: 20, duration: 0.8 }, 0.3)
+  .to('#hero-eyebrow', { opacity: 1 }, 0.3)
+  .from('#name-first', { opacity: 0, y: 60, duration: 1 }, 0.5)
+  .from('#name-dot', { opacity: 0, scale: 0, duration: 0.5 }, 0.9)
+  .from('#name-last', { opacity: 0, x: -40, duration: 0.8 }, 0.7)
+  .from('.hero-role', { opacity: 0, y: 20, duration: 0.8 }, 1)
+  .from('.hero-scroll', { opacity: 0, duration: 0.8 }, 1.4)
+  .from('nav', { opacity: 0, y: -20, duration: 0.8 }, 0.2);
+
+// Scroll reveals
+gsap.utils.toArray('.reveal').forEach(el => {
+  gsap.fromTo(el,
+    { opacity: 0, y: 40 },
+    {
+      opacity: 1, y: 0, duration: 0.9, ease: 'power3.out',
+      scrollTrigger: {
+        trigger: el,
+        start: 'top 85%',
+        toggleActions: 'play none none none'
+      }
+    }
+  );
+});
+
+// NAV bg on scroll
+ScrollTrigger.create({
+  start: 'top -80',
+  onUpdate: (self) => {
+    const nav = document.getElementById('navbar');
+    if (self.progress > 0) {
+      nav.style.background = 'rgba(5,5,5,0.9)';
+      nav.style.backdropFilter = 'blur(20px)';
+      nav.style.borderBottom = '1px solid rgba(255,255,255,0.06)';
+    } else {
+      nav.style.background = 'transparent';
+      nav.style.backdropFilter = 'none';
+      nav.style.borderBottom = 'none';
+    }
+  }
+});
+
+// Marquee pause on hover
+document.querySelectorAll('.marquee-wrapper').forEach(w => {
+  w.addEventListener('mouseenter', () => w.querySelectorAll('.marquee-track').forEach(t => t.style.animationPlayState = 'paused'));
+  w.addEventListener('mouseleave', () => w.querySelectorAll('.marquee-track').forEach(t => t.style.animationPlayState = 'running'));
+});
+</script>
+</body>
+</html>
