@@ -1,0 +1,54 @@
+{
+  "name": { "first": "Jane", "last": "Du" },
+  "role": "AI-Focused Software Development Engineer",
+  "location": "Bellevue, WA",
+  "email": "jiayidu90@gmail.com",
+  "phone": "+1 585-413-8839",
+  "linkedin": "https://linkedin.com/in/jane-du",
+  "yearsExperience": "6+",
+  "tagline": "Designing scalable systems at the intersection of cloud infrastructure and generative AI.",
+  "experience": [
+    {
+      "date": "Aug 2025 — Present",
+      "company": "Amazon Kids+",
+      "role": "Software Development Engineer II",
+      "location": "Seattle, WA",
+      "bullets": [
+        "Led end-to-end deployment of a VAE-based recommendation system using EMR, Redshift, S3, and Fargate orchestration",
+        "Designed automatic retry framework for 2,000+ ML pipeline jobs with Lambda + EventBridge, reducing transient failures by 30%",
+        "Redesigned personalization fallback logic with model-usage telemetry across multi-model recommendation system"
+      ]
+    },
+    {
+      "date": "Dec 2021 — Aug 2025",
+      "company": "Amazon Prime Gaming",
+      "role": "Software Development Engineer II",
+      "location": "Seattle, WA",
+      "bullets": [
+        "Led delivery of post-claim transactional emails for 80M+ customers across 5 marketplaces, improving retention by up to 20%",
+        "Designed and built Prime Gaming notification system from scratch — backend services, frontend settings, and unsubscribe flow",
+        "Implemented MCP-based internal knowledge server with semantic search, improving onboarding efficiency",
+        "Led AI/LLM demo sessions at skip-level meetings"
+      ]
+    },
+    {
+      "date": "Jan 2020 — Dec 2021",
+      "company": "AWS Lambda & Prime Gaming",
+      "role": "Software Development Engineer I",
+      "location": "Seattle, WA",
+      "bullets": [
+        "Proposed and implemented panic wrapper log changes, reducing service logs and saving 90% I/O memory",
+        "Normalized cold start latency by separating cached zip and squash artifacts — 30x improvement in customer experience"
+      ]
+    }
+  ],
+  "skills": {
+    "row1": ["Java", "Python", "Go", "JavaScript", "SQL", "Amazon Bedrock", "AWS Lambda", "Docker", "Spring Boot", "GraphQL", "DynamoDB", "Kinesis"],
+    "row2": ["Kiro AI", "MCP Server", "VAE Models", "ML Pipelines", "LLM Integration", "A/B Testing", "EMR", "Fargate", "Step Functions", "CloudFormation", "CI/CD", "REST APIs"]
+  },
+  "education": [
+    { "degree": "PhD Candidate, Chemical Engineering (AI for Catalyst Selection)", "school": "Oregon State University", "year": "2016–2017" },
+    { "degree": "MS", "school": "University of Rochester", "year": "2015" },
+    { "degree": "BS (Dual Degree)", "school": "SUNY ESF / Beijing U. of Chemical Technology", "year": "2013" }
+  ]
+}
